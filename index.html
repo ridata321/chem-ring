@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>高中化學光譜圓環</title>
+<meta name="description" content="高中化學各冊定義與方程式的彩虹同心圓關係圖">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&display=swap">
+<style>
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+/* Layout: dark record-sleeve poster; chart left, reading panel right; indexes below */
+:root{
+  --bg:#0f1015; --panel:#17191f; --fg:#ebe8e0; --muted:#8d919c; --faint:#2b2e38; --line:#22252d; --ring:#3a3d47;
+  --display:"Noto Serif TC","Songti TC",serif;
+  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+.page{max-width:1500px;margin:0 auto}
+h1{font-family:var(--display);font-size:clamp(24px,4vw,38px);margin:0;letter-spacing:.04em;text-wrap:balance}
+h2{font-family:var(--display);font-size:20px;margin:0;letter-spacing:.04em}
+.sub{color:var(--muted);font-size:14px;line-height:1.7;margin:8px 0 0;max-width:68ch}
+.books{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.book{font-size:13px;border:1px solid var(--faint);border-radius:6px;padding:5px 10px;color:var(--muted);display:flex;gap:8px;align-items:baseline}
+.book b{font-weight:500;color:var(--fg)}
+.book.empty{border-style:dashed;opacity:.7}
+.book small{font-size:11px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;margin-top:20px;align-items:start}
+@media (max-width:1000px){.layout{grid-template-columns:minmax(0,1fr)}}
+.chartcol{min-width:0;display:grid;gap:8px;justify-items:start}
+.chartwrap{overflow:auto;-webkit-overflow-scrolling:touch;width:100%;max-height:none}
+.chartwrap.big{max-height:90vh}
+.chartwrap.big svg{min-width:1800px}
+.zoombtn{font:inherit;font-size:13px;color:var(--muted);background:var(--panel);border:1px solid var(--faint);border-radius:6px;padding:4px 12px;cursor:pointer}
+.zoombtn[aria-pressed="true"]{color:var(--fg);border-color:var(--fg)}
+svg{display:block;width:100%;min-width:720px;height:auto}
+aside{position:sticky;top:max(16px,env(safe-area-inset-top,0px));background:var(--panel);border:1px solid var(--faint);border-radius:10px;padding:18px;display:grid;gap:12px;min-width:0}
+@media (max-width:1000px){aside{position:static}}
+.search{display:flex;gap:8px}
+.search input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--faint);border-radius:6px;padding:8px 10px}
+.search input:focus-visible{outline:2px solid hsl(195 80% 58%);outline-offset:1px}
+#panel{display:grid;gap:10px;font-size:14px;line-height:1.75}
+#panel .kind{font-size:11px;letter-spacing:.12em;color:var(--muted)}
+#panel .term{font-family:var(--display);font-size:24px;line-height:1.3;display:flex;gap:10px;align-items:center}
+#panel .sw{width:12px;height:12px;border-radius:3px;flex:none}
+#panel math{font-size:1.15em}
+#panel .where{display:flex;flex-wrap:wrap;gap:6px}
+#panel .muted{color:var(--muted)}
+.chip{display:inline-block;font-size:12px;padding:2px 8px;border-radius:4px;border:1px solid var(--faint);white-space:nowrap;color:var(--muted);background:transparent;font-family:inherit;cursor:pointer}
+.chip.first{color:var(--fg);border-color:var(--fg)}
+.legend{font-size:12px;color:var(--muted);line-height:1.7;border-top:1px solid var(--faint);padding-top:10px}
+/* svg */
+.lbl{font-size:8.6px;fill:var(--muted);cursor:pointer}
+.lbl.shared{fill:var(--fg)}
+.eqlbl{font-size:10.5px;fill:var(--muted);cursor:pointer}
+.eqlbl.shared{fill:var(--fg)}
+.eqlbl.later{fill:var(--muted);font-size:9.5px;opacity:.75}
+.chname{font-size:13px;fill:var(--fg);font-weight:500;letter-spacing:.06em}
+.bookname{font-size:12px;fill:var(--muted);letter-spacing:.3em}
+.ringline{fill:none;stroke:var(--ring);stroke-width:1}
+.ringtitle{font-size:11px;fill:var(--muted);letter-spacing:.2em}
+.center1{font-family:var(--display);font-size:30px;fill:var(--fg);font-weight:700}
+.center2{font-size:12px;fill:var(--muted)}
+.links path{fill:none;mix-blend-mode:screen;transition:stroke-opacity .15s}
+.hit{cursor:pointer}
+svg.dim .links path{stroke-opacity:.03!important}
+svg.dim .links path.on{stroke-opacity:.95!important;stroke-width:1.6}
+svg.dim .mark,svg.dim .lbl,svg.dim .eqlbl{opacity:.18}
+svg.dim .on.mark,svg.dim .on.lbl,svg.dim .on.eqlbl{opacity:1}
+svg.dim .on.lbl,svg.dim .on.eqlbl{fill:var(--fg)}
+/* index */
+.index{margin-top:44px}
+.ihead{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}
+.tabs{display:flex;gap:6px}
+.tabs button,.filters button{font:inherit;font-size:13px;color:var(--muted);background:transparent;border:1px solid var(--faint);border-radius:999px;padding:5px 14px;cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--bg);background:var(--fg);border-color:var(--fg);font-weight:500}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 10px}
+.filters button{border-radius:6px;background:var(--panel)}
+.filters button[aria-pressed="true"]{color:var(--fg);border-color:var(--fg)}
+button:focus-visible{outline:2px solid hsl(195 80% 58%);outline-offset:2px}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
+th{font-weight:500;color:var(--muted);text-align:left;font-size:12px;letter-spacing:.06em;padding:8px 10px;border-bottom:1px solid var(--faint)}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.6}
+td.t{white-space:nowrap}
+td.d{min-width:320px}
+tr{cursor:pointer}
+tr:hover td,tr.hl td{background:var(--panel)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:middle}
+.count{font-size:12px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.links path{transition:none}}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-top:14px}
+.btn{font:inherit;font-size:13px;color:var(--fg);background:transparent;border:1px solid var(--faint);border-radius:6px;padding:6px 14px;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--fg);color:var(--bg);border-color:var(--fg);font-weight:500}
+.btn.small{font-size:12px;padding:4px 10px}
+.auth{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);min-height:40px}
+.auth img{width:26px;height:26px;border-radius:50%}
+.note{font-size:12px;color:var(--muted)}
+dialog{background:var(--panel);color:var(--fg);border:1px solid var(--faint);border-radius:12px;padding:0;width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 48px)}
+dialog::backdrop{background:rgba(5,6,10,.7)}
+.dlg{padding:22px;display:grid;gap:14px}
+.dlg h3{font-family:var(--display);font-size:20px;margin:0}
+.dlg label{display:grid;gap:6px;font-size:13px;color:var(--muted)}
+.dlg input,.dlg select,.dlg textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--faint);border-radius:6px;padding:8px 10px;width:100%}
+.dlg textarea{min-height:90px;resize:vertical;line-height:1.6}
+.dlg .cur{font-size:14px;line-height:1.7;background:var(--bg);border:1px dashed var(--faint);border-radius:6px;padding:8px 10px;color:var(--fg)}
+.dlg .row{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;align-items:center}
+.dlg .msg{font-size:13px;color:var(--muted);min-height:1.2em}
+.dlg .msg.err{color:#ff8a80}
+.dlg .msg.ok{color:#9be59b}
+.mine{display:grid;gap:10px;max-height:60vh;overflow:auto}
+.mine .it{border:1px solid var(--faint);border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.6;display:grid;gap:4px}
+.pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;border:1px solid currentColor}
+.pill.p{color:#f2c94c}.pill.a{color:#6fcf97}.pill.r{color:#eb8a8a}
+</style>
+
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>高中化學光譜圓環</h1>
+    <p class="sub">外圈是各章的定義，內圈是方程式。沿圓周依章節順序排列，顏色照彩虹順序漸變，同一章落在同一段色帶。長條越長，表示這個詞被越多章節用到；中間的線連起同一個詞或同一條式子出現的不同位置。</p>
+    <div class="books" id="books"></div>
+    <div class="toolbar">
+      <button class="btn primary" id="openSuggestGeneral" type="button">提供建議</button>
+      <div id="authArea" class="auth"></div>
+      <span id="dataNote" class="note"></span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="chartcol"><button id="zoom" class="zoombtn" aria-pressed="false">放大圖表</button><div class="chartwrap"><svg id="ring" viewBox="0 0 1600 1600" role="img" aria-label="高中化學定義與方程式同心圓圖"></svg></div></div>
+    <aside>
+      <div class="search"><input id="q" type="search" placeholder="搜尋定義或方程式，例如：莫耳" aria-label="搜尋定義或方程式" list="qlist"><datalist id="qlist"></datalist></div>
+      <div id="panel"></div>
+      <div class="legend">點圖上的詞、式子或章節色帶可固定選取，再點一次空白處取消。定義為依課本內容整理的簡述，教學使用前請再核對。</div>
+    </aside>
+  </div>
+
+  <section class="index">
+    <div class="ihead">
+      <h2 id="ititle">定義索引</h2>
+      <div class="tabs" role="tablist">
+        <button role="tab" id="t-def" aria-selected="true" data-tab="def">定義</button>
+        <button role="tab" id="t-eq" aria-selected="false" data-tab="eq">方程式</button>
+      </div>
+    </div>
+    <div class="filters" id="filters"></div>
+    <div class="tablewrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async></script>
+<script>
+const tex = s => { try { return katex.renderToString(s, {output:"mathml", throwOnError:false}); } catch(e) { return s; } };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const eqHTML = e => e.tex ? tex(e.tex) : `<span>${esc(e.text || "")}</span>`;
+const suggestBtn = (type, target, current) => `<div><button class="btn small" type="button" data-suggest data-type="${esc(type)}" data-target="${esc(target)}" data-current="${esc(current)}">建議修改這條</button></div>`;
+function boot(DATA) {
+
+// ---- 資料整理 ----
+const chapters = DATA.chapters.map((c,i) => ({...c, idx:i, num:c.num ?? i+1}));
+const chById = Object.fromEntries(chapters.map(c => [c.id, c]));
+const bookOf = {}; DATA.books.forEach(b => b.chapters.forEach(id => bookOf[id] = b));
+const secShort = s => s.split(" ")[0];
+const chLabel = id => (chById[id].bookCode && chById[id].bookCode !== "高一" ? chById[id].bookCode + " " : "") + `第${chById[id].num}章`;
+
+// 定義：每章每詞一個位置
+const DEF = []; const termUses = {};
+chapters.forEach(c => Object.entries(c.sections).forEach(([sec, list]) => list.forEach(t => {
+  if (DEF.some(d => d.ch === c.id && d.term === t)) return;
+  const d = {kind:"def", term:t, ch:c.id, sec, i:DEF.length}; DEF.push(d);
+  (termUses[t] = termUses[t] || []).push(d);
+})));
+// 方程式：每章每節一個位置
+const EQ = DATA.equations; const EQPOS = [];
+EQ.forEach(e => { const seen = new Set(); e.uses.forEach((u,k) => { const key = u.ch + u.sec; if (seen.has(key)) return; seen.add(key);
+  EQPOS.push({kind:"eq", id:e.id, eq:e, ch:u.ch, sec:u.sec, first:k===0}); }); });
+
+// ---- 角度配置：依定義數量分配，章與書之間留空 ----
+const GAP_CH = 2.2, GAP_BOOK = 5;
+let units = 0; const secSpan = {}, chSpan = {};
+chapters.forEach((c,ci) => {
+  if (ci > 0) units += (bookOf[c.id] !== bookOf[chapters[ci-1].id]) ? GAP_BOOK : GAP_CH;
+  const c0 = units;
+  Object.keys(c.sections).forEach(sec => {
+    const ds = DEF.filter(d => d.ch === c.id && d.sec === sec);
+    const s0 = units; ds.forEach(d => { d.u = units + .5; units += 1; }); if (!ds.length) units += 1;
+    secSpan[c.id + sec] = [s0, units];
+  });
+  chSpan[c.id] = [c0, units];
+});
+units += GAP_CH;
+const START = -90 + (360 * GAP_CH / 2) / units;
+const ang = u => START + u / units * 360;              // 度
+const hueAt = u => (u / units) * 300;                   // 紅 → 紫
+const colAt = (u, l=62) => `hsl(${hueAt(u)} 82% ${l}%)`;
+DEF.forEach(d => { d.a = ang(d.u); d.color = colAt(d.u); });
+// 方程式依所在小節平均分布
+const bySec = {}; EQPOS.forEach(p => (bySec[p.ch] = bySec[p.ch] || []).push(p));
+Object.entries(bySec).forEach(([k, arr]) => { const [s0,s1] = chSpan[k];
+  const secOrder = Object.keys(chById[k].sections); arr.sort((x,y) => secOrder.indexOf(x.sec) - secOrder.indexOf(y.sec) || (y.first - x.first));
+  arr.forEach((p,j) => { p.u = s0 + (j + .5) * (s1 - s0) / arr.length; p.a = ang(p.u); p.color = colAt(p.u); }); });
+EQ.forEach(e => { e.pos = EQPOS.filter(p => p.id === e.id); e.color = e.pos[0].color; });
+
+// ---- 繪圖 ----
+const svg = document.getElementById("ring"), NS = "http://www.w3.org/2000/svg", C = 800;
+const el = (tag, attrs, parent) => { const n = document.createElementNS(NS, tag);
+  for (const a in attrs) n.setAttribute(a, attrs[a]); parent && parent.appendChild(n); return n; };
+const P = (r, a) => [C + r * Math.cos(a * Math.PI/180), C + r * Math.sin(a * Math.PI/180)];
+const arcPath = (r0, r1, a0, a1) => { const [x0,y0]=P(r1,a0),[x1,y1]=P(r1,a1),[x2,y2]=P(r0,a1),[x3,y3]=P(r0,a0), L = (a1-a0)>180?1:0;
+  return `M${x0},${y0} A${r1},${r1} 0 ${L} 1 ${x1},${y1} L${x2},${y2} A${r0},${r0} 0 ${L} 0 ${x3},${y3}Z`; };
+const flip = a => { const n = ((a % 360) + 360) % 360; return n > 90 && n < 270; };
+
+const R = {defIn:548, defBar:556, eq:362, eqLblEnd:348, defLink:446, eqLink:250, chIn:704, chOut:718, chLbl:734, book0:758, book1:764, bookLbl:782};
+const maxUse = Math.max(...Object.values(termUses).map(a => a.length));
+
+// 參考圓
+[R.defIn, R.eq].forEach(r => el("circle", {cx:C, cy:C, r, class:"ringline"}, svg));
+
+// 書 / 章色帶
+const defs = el("defs", {}, svg);
+DATA.books.filter(b => b.chapters.length).forEach((b,bi) => {
+  const a0 = ang(chSpan[b.chapters[0]][0]) - .3, a1 = ang(chSpan[b.chapters.at(-1)][1]) + .3;
+  el("path", {d:arcPath(R.book0, R.book1, a0, a1), fill:"var(--ring)"}, svg);
+  const id = "bp" + bi, [x0,y0] = P(R.bookLbl, a0 + 1), [x1,y1] = P(R.bookLbl, a1 - 1);
+  el("path", {id, d:`M${x0},${y0} A${R.bookLbl},${R.bookLbl} 0 ${(a1-a0)>180?1:0} 1 ${x1},${y1}`, fill:"none"}, defs);
+  const t = el("text", {class:"bookname"}, svg); const tp = el("textPath", {href:"#"+id, startOffset:"1%"}, t);
+  tp.textContent = `${b.name}　${b.grade}`;
+});
+const gCh = el("g", {}, svg);
+chapters.forEach(c => {
+  const [u0,u1] = chSpan[c.id], g = el("g", {class:"hit", "data-ch":c.id}, gCh);
+  for (let u = u0; u < u1; u += .5) el("path", {d:arcPath(R.chIn, R.chOut, ang(u), ang(Math.min(u+.5,u1)) + .05), fill:colAt(u+.25)}, g);
+  const a0 = ang(u0), a1 = ang(u1), mid = (((a0+a1)/2) % 360 + 360) % 360, id = "cp" + c.id;
+  const bottom = mid > 10 && mid < 170, rr = bottom ? R.chLbl + 10 : R.chLbl;
+  const [x0,y0] = P(rr, a0), [x1,y1] = P(rr, a1), big = (a1-a0)>180?1:0;
+  el("path", {id, d: bottom ? `M${x1},${y1} A${rr},${rr} 0 ${big} 0 ${x0},${y0}` : `M${x0},${y0} A${rr},${rr} 0 ${big} 1 ${x1},${y1}`, fill:"none"}, defs);
+  const t = el("text", {class:"chname", "text-anchor":"middle"}, g);
+  el("textPath", {href:"#"+id, startOffset:"50%"}, t).textContent = `第${c.num}章 ${c.title}`;
+  g.addEventListener("click", ev => { ev.stopPropagation(); select({ch:c.id}, true); });
+  g.addEventListener("mouseenter", () => hover({ch:c.id}));
+  g.addEventListener("mouseleave", unhover);
+});
+
+// 連線（同詞跨章、同式跨節）
+const gLinks = el("g", {class:"links"}, svg);
+const curve = (a, b, r, key, color, w) => {
+  const [x0,y0] = P(r, a.a), [x1,y1] = P(r, b.a);
+  let da = Math.abs(((b.a - a.a + 540) % 360) - 180); const k = 1 - Math.min(1, da / 180) * .85;
+  const [cx,cy] = P(r * k * .5, (a.a + b.a)/2 + (Math.abs(b.a - a.a) > 180 ? 180 : 0));
+  const p = el("path", {d:`M${x0},${y0} Q${cx},${cy} ${x1},${y1}`, stroke:color, "stroke-opacity":.38, "stroke-width":w}, gLinks);
+  p.dataset.key = key; p.dataset.chs = a.ch + " " + b.ch; return p;
+};
+Object.entries(termUses).forEach(([t, arr]) => { for (let i = 1; i < arr.length; i++) curve(arr[0], arr[i], R.defLink, "def:" + t, arr[0].color, 1); });
+EQ.forEach(e => { for (let i = 1; i < e.pos.length; i++) curve(e.pos[0], e.pos[i], R.eqLink, "eq:" + e.id, e.color, 1.3); });
+
+// 外圈：定義
+const gDef = el("g", {}, svg);
+DEF.forEach(d => {
+  const n = termUses[d.term].length, len = 16 + (n - 1) * (90 / Math.max(1, maxUse - 1));
+  const [x0,y0] = P(R.defBar, d.a), [x1,y1] = P(R.defBar + len, d.a);
+  const bar = el("line", {x1:x0, y1:y0, x2:x1, y2:y1, stroke:d.color, "stroke-width":7.5, class:"mark"}, gDef);
+  const [lx,ly] = P(R.defIn - 6, d.a), f = flip(d.a);
+  const lbl = el("text", {x:lx, y:ly, class:"lbl" + (n>1?" shared":""), "text-anchor":f?"start":"end", "dominant-baseline":"central",
+    transform:`rotate(${f ? d.a + 180 : d.a} ${lx} ${ly})`}, gDef);
+  lbl.textContent = d.term;
+  const [hx0,hy0] = P(R.defLink, d.a), [hx1,hy1] = P(R.defBar + len + 4, d.a);
+  const hit = el("line", {x1:hx0, y1:hy0, x2:hx1, y2:hy1, stroke:"transparent", "stroke-width":9, class:"hit"}, gDef);
+  d.nodes = [bar, lbl];
+  hit.addEventListener("mouseenter", () => hover({term:d.term}));
+  hit.addEventListener("mouseleave", unhover);
+  hit.addEventListener("click", ev => { ev.stopPropagation(); select({term:d.term}, true); });
+});
+
+// 內圈：方程式
+const gEq = el("g", {}, svg);
+EQPOS.forEach(p => {
+  const [x0,y0] = P(R.eq, p.a), [x1,y1] = P(R.eq + (p.first ? 26 : 14), p.a);
+  const m = el("line", {x1:x0, y1:y0, x2:x1, y2:y1, stroke:p.color, "stroke-width":p.first?6:4, class:"mark"}, gEq);
+  const [lx,ly] = P(R.eqLblEnd, p.a), f = flip(p.a);
+  const lbl = el("text", {x:lx, y:ly, class:"eqlbl" + (p.eq.pos.length>1?" shared":""), "text-anchor":f?"start":"end", "dominant-baseline":"central",
+    transform:`rotate(${f ? p.a + 180 : p.a} ${lx} ${ly})`}, gEq);
+  lbl.textContent = p.eq.name; if (!p.first) lbl.classList.add("later");
+  const [hx0,hy0] = P(R.eqLink, p.a), [hx1,hy1] = P(R.eq + 30, p.a);
+  const hit = el("line", {x1:hx0, y1:hy0, x2:hx1, y2:hy1, stroke:"transparent", "stroke-width":12, class:"hit"}, gEq);
+  p.nodes = [m, lbl];
+  hit.addEventListener("mouseenter", () => hover({eq:p.id}));
+  hit.addEventListener("mouseleave", unhover);
+  hit.addEventListener("click", ev => { ev.stopPropagation(); select({eq:p.id}, true); });
+});
+
+// 圈名與中心
+const ringName = (r, txt) => { const [x,y] = P(r, -90); el("text", {x, y:y-6, "text-anchor":"middle", class:"ringtitle"}, svg).textContent = txt; };
+el("text", {x:C, y:C-6, "text-anchor":"middle", class:"center1"}, svg).textContent = "化學";
+el("text", {x:C, y:C+20, "text-anchor":"middle", class:"center2"}, svg).textContent = `${DEF.length} 個定義位置 · ${EQ.length} 條方程式`;
+el("text", {x:C, y:C+38, "text-anchor":"middle", class:"center2"}, svg).textContent = "外圈定義 ／ 內圈方程式";
+
+// ---- 互動 ----
+const panel = document.getElementById("panel");
+let pinned = null;
+function apply(sel) {
+  svg.classList.add("dim");
+  svg.querySelectorAll(".on").forEach(n => n.classList.remove("on"));
+  let keys = [], items = [];
+  if (sel.term) { keys = ["def:" + sel.term]; items = termUses[sel.term]; }
+  if (sel.eq) { keys = ["eq:" + sel.eq]; items = EQPOS.filter(p => p.id === sel.eq); }
+  if (sel.ch) { items = DEF.filter(d => d.ch === sel.ch).concat(EQPOS.filter(p => p.ch === sel.ch)); }
+  gLinks.querySelectorAll("path").forEach(p => { if (sel.ch ? p.dataset.chs.includes(sel.ch) : keys.includes(p.dataset.key)) p.classList.add("on"); });
+  items.forEach(it => it.nodes.forEach(n => n.classList.add("on")));
+  showPanel(sel);
+  document.querySelectorAll("#tbody tr").forEach(r => r.classList.toggle("hl", r.dataset.key === (sel.term ? "def:"+sel.term : sel.eq ? "eq:"+sel.eq : "")));
+}
+function clearSel() {
+  svg.classList.remove("dim"); svg.querySelectorAll(".on").forEach(n => n.classList.remove("on"));
+  document.querySelectorAll("#tbody tr.hl").forEach(r => r.classList.remove("hl")); showPanel(null);
+}
+function hover(sel) { if (!pinned) apply(sel); }
+function unhover() { if (!pinned) clearSel(); }
+function select(sel, toggle) {
+  const k = JSON.stringify(sel);
+  if (toggle && pinned === k) { pinned = null; clearSel(); return; }
+  pinned = k; apply(sel);
+}
+svg.addEventListener("click", () => { pinned = null; clearSel(); });
+
+function showPanel(sel) {
+  if (!sel) {
+    panel.innerHTML = `<div class="kind">目前收錄</div><div class="term">${chapters.length} 章</div>
+      <div class="muted">${Object.keys(termUses).length} 個定義、${EQ.length} 條方程式。把滑鼠移到圖上，或在上方搜尋。</div>`;
+    return;
+  }
+  if (sel.term) {
+    const arr = termUses[sel.term];
+    panel.innerHTML = `<div class="kind">定義</div>
+      <div class="term"><span class="sw" style="background:${arr[0].color}"></span>${esc(sel.term)}</div>
+      <div>${esc(DATA.definitions[sel.term] || "（尚未填寫定義）")}</div>
+      <div class="muted">出現在 ${arr.length} 個章節</div>
+      <div class="where">${arr.map((d,i) => `<span class="chip${i?"":" first"}">${chLabel(d.ch)} ${secShort(d.sec)}</span>`).join("")}</div>
+      ${suggestBtn("修改定義", sel.term, DATA.definitions[sel.term] || "")}`;
+  } else if (sel.eq) {
+    const e = EQ.find(e => e.id === sel.eq);
+    panel.innerHTML = `<div class="kind">方程式</div>
+      <div class="term"><span class="sw" style="background:${e.color}"></span>${esc(e.name)}</div>
+      <div>${eqHTML(e)}</div>
+      <div class="muted">第一次出現在 ${chLabel(e.pos[0].ch)} ${secShort(e.pos[0].sec)}，共用在 ${e.pos.length} 個小節</div>
+      <div class="where">${e.pos.map(p => `<span class="chip${p.first?" first":""}">${chLabel(p.ch)} ${secShort(p.sec)}</span>`).join("")}</div>
+      ${suggestBtn("修改方程式", e.name, e.text || "")}`;
+  } else if (sel.ch) {
+    const c = chById[sel.ch], ds = DEF.filter(d => d.ch === c.id), es = EQPOS.filter(p => p.ch === c.id);
+    const shared = ds.filter(d => termUses[d.term].length > 1).length;
+    panel.innerHTML = `<div class="kind">${esc(bookOf[c.id].name)} · 第${c.num}章</div>
+      <div class="term">${esc(c.title)}</div>
+      <div class="muted">${ds.length} 個定義（${shared} 個與其他章共用）· ${es.length} 條方程式</div>
+      <div class="where">${Object.keys(c.sections).map(s => `<span class="chip">${esc(s)}</span>`).join("")}</div>`;
+  }
+}
+showPanel(null);
+
+// 搜尋
+const q = document.getElementById("q"), qlist = document.getElementById("qlist");
+Object.keys(termUses).concat(EQ.map(e => e.name)).forEach(n => { const o = document.createElement("option"); o.value = n; qlist.appendChild(o); });
+q.addEventListener("input", () => {
+  const v = q.value.trim(); if (!v) { pinned = null; clearSel(); return; }
+  const t = Object.keys(termUses).find(t => t === v) || Object.keys(termUses).find(t => t.includes(v));
+  const e = EQ.find(e => e.name === v) || (!t && EQ.find(e => e.name.includes(v)));
+  if (e && (!t || e.name === v)) select({eq:e.id}); else if (t) select({term:t});
+});
+
+// ---- 書目列 ----
+document.getElementById("books").innerHTML = DATA.books.map(b =>
+  `<div class="book${b.chapters.length?"":" empty"}"><b>${esc(b.name)}</b><span>${esc(b.grade)}</span><small>${b.chapters.length ? b.chapters.length + " 章已收錄" : "待上傳"}</small></div>`).join("");
+
+// ---- 索引表 ----
+let tab = "def", filt = null;
+function renderIndex() {
+  document.getElementById("ititle").textContent = tab === "def" ? "定義索引" : "方程式索引";
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
+  const f = document.getElementById("filters"); f.innerHTML = "";
+  [{id:null, label:"全部"}, ...chapters.map(c => ({id:c.id, label:`第${c.num}章 ${c.title}`}))].forEach(o => {
+    const b = document.createElement("button"); b.textContent = o.label; b.setAttribute("aria-pressed", String(filt === o.id));
+    b.addEventListener("click", () => { filt = o.id; renderIndex(); }); f.appendChild(b); });
+  const th = document.getElementById("thead"), tb = document.getElementById("tbody");
+  if (tab === "def") {
+    th.innerHTML = `<tr><th>詞</th><th>定義</th><th>出現章節</th></tr>`;
+    const rows = Object.entries(termUses).filter(([t, arr]) => !filt || arr.some(d => d.ch === filt));
+    tb.innerHTML = rows.map(([t, arr]) => `<tr data-key="def:${esc(t)}"><td class="t"><span class="dot" style="background:${arr[0].color}"></span>${esc(t)}</td>
+      <td class="d">${esc(DATA.definitions[t] || "")}</td>
+      <td>${arr.map((d,i) => `<span class="chip${i?"":" first"}">${chLabel(d.ch)} ${secShort(d.sec)}</span>`).join(" ")}</td></tr>`).join("");
+    tb.querySelectorAll("tr").forEach((r,i) => r.addEventListener("click", () => select({term:rows[i][0]})));
+  } else {
+    th.innerHTML = `<tr><th>名稱</th><th>方程式</th><th>使用位置</th></tr>`;
+    const rows = EQ.filter(e => !filt || e.pos.some(p => p.ch === filt));
+    tb.innerHTML = rows.map(e => `<tr data-key="eq:${e.id}"><td class="t"><span class="dot" style="background:${e.color}"></span>${esc(e.name)}</td>
+      <td class="d">${eqHTML(e)}</td>
+      <td>${e.pos.map(p => `<span class="chip${p.first?" first":""}">${chLabel(p.ch)} ${secShort(p.sec)}</span>`).join(" ")}</td></tr>`).join("");
+    tb.querySelectorAll("tr").forEach((r,i) => r.addEventListener("click", () => select({eq:rows[i].id})));
+  }
+}
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => { tab = b.dataset.tab; renderIndex(); }));
+renderIndex();
+const zb = document.getElementById("zoom"), cw = document.querySelector(".chartwrap");
+zb.addEventListener("click", () => { const on = !cw.classList.contains("big"); cw.classList.toggle("big", on);
+  zb.setAttribute("aria-pressed", String(on)); zb.textContent = on ? "縮回全圖" : "放大圖表";
+  if (on) { cw.scrollLeft = (cw.scrollWidth - cw.clientWidth) / 2; cw.scrollTop = 0; } });
+}
+</script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+
+
+</body>
+</html>

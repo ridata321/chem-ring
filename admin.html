@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>光譜圓環後台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&display=swap">
+<style>
+/* Layout: single review column; each suggestion is a card with before / after side by side */
+*{box-sizing:border-box}
+:root{
+  --bg:#0f1015; --panel:#17191f; --fg:#ebe8e0; --muted:#8d919c; --faint:#2b2e38; --line:#22252d;
+  --pending:#f2c94c; --ok:#6fcf97; --no:#eb8a8a;
+  --display:"Noto Serif TC","Songti TC",serif;
+  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  color-scheme:dark;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html,body{background:var(--bg);color:var(--fg)}
+body{margin:0;font-family:var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+.page{max-width:1080px;margin:0 auto;display:grid;gap:20px}
+header{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;justify-content:space-between}
+h1{font-family:var(--display);font-size:clamp(24px,4vw,34px);margin:0;letter-spacing:.04em}
+.sub{color:var(--muted);font-size:14px;margin:6px 0 0}
+.auth{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--muted)}
+.auth img{width:26px;height:26px;border-radius:50%}
+.btn{font:inherit;font-size:13px;color:var(--fg);background:transparent;border:1px solid var(--faint);border-radius:6px;padding:6px 14px;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#0b1a10;font-weight:500}
+.btn.no{color:var(--no);border-color:color-mix(in srgb,var(--no) 50%,transparent)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid hsl(195 80% 58%);outline-offset:1px}
+.stats{display:flex;flex-wrap:wrap;gap:8px}
+.stats button{font:inherit;font-size:13px;color:var(--muted);background:var(--panel);border:1px solid var(--faint);border-radius:999px;padding:5px 14px;cursor:pointer;font-variant-numeric:tabular-nums}
+.stats button[aria-pressed="true"]{color:var(--fg);border-color:var(--fg)}
+.stats b{font-weight:700;margin-left:6px}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.tools input{font:inherit;font-size:14px;color:var(--fg);background:var(--panel);border:1px solid var(--faint);border-radius:6px;padding:7px 10px;min-width:0;flex:1 1 220px}
+.list{display:grid;gap:14px}
+.card{background:var(--panel);border:1px solid var(--faint);border-radius:10px;padding:16px 18px;display:grid;gap:12px;border-left:4px solid var(--pending)}
+.card.s-已採納{border-left-color:var(--ok)}
+.card.s-不採納{border-left-color:var(--no)}
+.top{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline}
+.type{font-size:12px;padding:1px 8px;border-radius:4px;border:1px solid var(--faint);color:var(--muted)}
+.target{font-family:var(--display);font-size:20px}
+.meta{font-size:12px;color:var(--muted);margin-left:auto}
+.pill{font-size:11px;padding:1px 8px;border-radius:999px;border:1px solid currentColor}
+.pill.s-待處理{color:var(--pending)}.pill.s-已採納{color:var(--ok)}.pill.s-不採納{color:var(--no)}
+.cmp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media (max-width:700px){.cmp{grid-template-columns:minmax(0,1fr)}}
+.cmp > div{display:grid;gap:6px;min-width:0}
+.lab{font-size:11px;letter-spacing:.12em;color:var(--muted)}
+.box{font-size:14px;line-height:1.7;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-word}
+textarea{font:inherit;font-size:14px;line-height:1.7;color:var(--fg);background:var(--bg);border:1px solid var(--faint);border-radius:6px;padding:8px 10px;width:100%;min-height:76px;resize:vertical}
+.reason{font-size:13px;color:var(--muted);line-height:1.7}
+.acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.acts input{font:inherit;font-size:13px;color:var(--fg);background:var(--bg);border:1px solid var(--faint);border-radius:6px;padding:6px 10px;flex:1 1 200px;min-width:0}
+.msg{font-size:13px;color:var(--muted)}
+.empty{color:var(--muted);font-size:14px;padding:30px 0;text-align:center;border:1px dashed var(--faint);border-radius:10px}
+a{color:hsl(195 80% 70%)}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div>
+      <h1>光譜圓環後台</h1>
+      <p class="sub">使用者送來的建議都在這裡。採納並套用會直接改寫試算表，網站約一分鐘後更新。</p>
+    </div>
+    <div class="auth" id="auth"></div>
+  </header>
+  <div id="gate" class="empty">請用站長的 Google 帳號登入。</div>
+  <div id="main" hidden>
+    <div class="tools">
+      <div class="stats" id="stats"></div>
+      <input id="q" type="search" placeholder="搜尋對象、內容或 Email" aria-label="搜尋建議">
+      <button class="btn" id="reload" type="button">重新整理</button>
+      <a href="index.html">回到圓環</a>
+    </div>
+    <div class="list" id="list" style="margin-top:16px"></div>
+  </div>
+</div>
+<script src="https://accounts.google.com/gsi/client" async></script>
+<script src="config.js"></script>
+<script>
+const CFG = window.CHEM_CONFIG || {};
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let token = null, items = [], filter = "待處理";
+const APPLY = ["修改定義","修改方程式","新增定義","新增方程式"];
+
+async function api(action, payload) {
+  const r = await fetch(CFG.API_URL, {method:"POST", body: JSON.stringify({action, idToken: token, ...payload})});
+  const j = await r.json(); if (!j.ok) throw new Error(j.error || "failed"); return j;
+}
+function decode(t) { try { return JSON.parse(decodeURIComponent(escape(atob(t.split(".")[1].replace(/-/g,"+").replace(/_/g,"/"))))); } catch(e) { return null; } }
+
+function renderAuth(user) {
+  const a = $("#auth");
+  if (user) {
+    a.innerHTML = `${user.picture ? `<img src="${esc(user.picture)}" alt="" referrerpolicy="no-referrer">` : ""}<span>${esc(user.email)}</span><button class="btn" id="out" type="button">登出</button>`;
+    $("#out").onclick = () => { try { google.accounts.id.disableAutoSelect(); sessionStorage.removeItem("chemIdToken"); } catch(e) {} location.reload(); };
+  } else {
+    a.innerHTML = '<div id="gsi"></div>';
+    const tryBtn = () => { if (window.google?.accounts?.id) {
+      google.accounts.id.initialize({client_id: CFG.CLIENT_ID, callback: r => signedIn(r.credential), auto_select: true});
+      google.accounts.id.renderButton($("#gsi"), {theme:"filled_black", size:"medium", shape:"pill", locale:"zh-TW"});
+    } else setTimeout(tryBtn, 500); };
+    if (!CFG.CLIENT_ID || !CFG.API_URL) { $("#gate").textContent = "網站還沒設定 Apps Script 網址或 Google 用戶端 ID（config.js）。"; return; }
+    tryBtn();
+  }
+}
+
+async function signedIn(t) {
+  const p = decode(t); if (!p) return;
+  token = t; try { sessionStorage.setItem("chemIdToken", t); } catch(e) {}
+  renderAuth(p);
+  $("#gate").textContent = "確認權限中…";
+  try {
+    const w = await api("whoami", {});
+    if (!w.owner) { $("#gate").textContent = `${w.email} 不是站長帳號，沒有後台權限。`; return; }
+    $("#gate").hidden = true; $("#main").hidden = false; load();
+  } catch (e) { $("#gate").textContent = "登入已過期或驗證失敗，請重新登入。"; }
+}
+
+async function load() {
+  $("#list").innerHTML = '<div class="empty">讀取中…</div>';
+  try { items = (await api("list", {})).items; render(); }
+  catch (e) { $("#list").innerHTML = `<div class="empty">讀取失敗（${esc(e.message)}），請重新登入。</div>`; }
+}
+
+function render() {
+  const counts = {待處理:0, 已採納:0, 不採納:0}; items.forEach(i => counts[i.status] = (counts[i.status]||0) + 1);
+  $("#stats").innerHTML = ["待處理","已採納","不採納","全部"].map(s =>
+    `<button type="button" data-f="${s}" aria-pressed="${filter===s}">${s}<b>${s==="全部"?items.length:counts[s]||0}</b></button>`).join("");
+  $("#stats").querySelectorAll("button").forEach(b => b.onclick = () => { filter = b.dataset.f; render(); });
+  const q = $("#q").value.trim().toLowerCase();
+  const rows = items.filter(i => (filter === "全部" || i.status === filter) &&
+    (!q || [i.target, i.suggestion, i.current, i.email, i.name, i.reason].join(" ").toLowerCase().includes(q)));
+  if (!rows.length) { $("#list").innerHTML = `<div class="empty">${filter === "待處理" ? "沒有待處理的建議。" : "沒有符合的建議。"}</div>`; return; }
+  $("#list").innerHTML = rows.map(i => `<article class="card s-${esc(i.status)}" data-id="${esc(i.id)}">
+    <div class="top"><span class="type">${esc(i.type)}</span><span class="target">${esc(i.target || "（未指定）")}</span>
+      <span class="pill s-${esc(i.status)}">${esc(i.status)}</span>
+      <span class="meta">${esc(i.name)} · ${esc(i.email)} · ${esc(i.time)}</span></div>
+    <div class="cmp">
+      <div><span class="lab">原本內容</span><div class="box">${esc(i.current || "（無）")}</div></div>
+      <div><span class="lab">建議內容${APPLY.includes(i.type) && i.status === "待處理" ? "（可先修改再套用）" : ""}</span>
+        ${APPLY.includes(i.type) && i.status === "待處理" ? `<textarea aria-label="套用的內容">${esc(i.suggestion)}</textarea>` : `<div class="box">${esc(i.suggestion)}</div>`}</div>
+    </div>
+    ${i.reason ? `<div class="reason">理由：${esc(i.reason)}</div>` : ""}
+    <div class="acts">
+      <input type="text" placeholder="給對方的回覆（選填）" value="${esc(i.note)}" aria-label="站長備註">
+      ${i.status === "待處理" ? `
+        ${APPLY.includes(i.type) ? `<button class="btn ok" data-act="apply" type="button">採納並套用</button>` : ""}
+        <button class="btn" data-act="accept" type="button">${APPLY.includes(i.type) ? "只標記採納" : "採納"}</button>
+        <button class="btn no" data-act="reject" type="button">不採納</button>`
+      : `<button class="btn" data-act="reopen" type="button">改回待處理</button>`}
+      <span class="msg"></span>
+    </div></article>`).join("");
+  $("#list").querySelectorAll("[data-act]").forEach(b => b.onclick = () => act(b));
+}
+
+async function act(b) {
+  const card = b.closest(".card"), id = card.dataset.id, msg = card.querySelector(".msg");
+  const note = card.querySelector(".acts input").value, ta = card.querySelector("textarea");
+  const a = b.dataset.act;
+  const body = {id, note, status: a === "reject" ? "不採納" : a === "reopen" ? "待處理" : "已採納", apply: a === "apply"};
+  if (a === "apply" && ta) body.applyText = ta.value;
+  card.querySelectorAll("button").forEach(x => x.disabled = true); msg.textContent = "處理中…";
+  try {
+    const r = await api("review", body);
+    const it = items.find(x => x.id === id); it.status = body.status; it.note = [note, r.applied].filter(Boolean).join("　");
+    msg.textContent = r.applied || "已更新"; setTimeout(render, 900);
+  } catch (e) { msg.textContent = "失敗：" + e.message; card.querySelectorAll("button").forEach(x => x.disabled = false); }
+}
+
+$("#q").addEventListener("input", render);
+$("#reload").onclick = load;
+renderAuth(null);
+try { const t = sessionStorage.getItem("chemIdToken"); const p = t && decode(t); if (p && p.exp*1000 > Date.now()+60000) signedIn(t); } catch(e) {}
+</script>
+</body>
+</html>
